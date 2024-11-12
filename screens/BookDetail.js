@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, Alert, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, Button, Alert, StyleSheet, ActivityIndicator, Image } from "react-native";
 import { db } from "../firebase";
 import { collection, getDocs, addDoc, query, where } from "firebase/firestore";
 
 const BookDetail = ({ route }) => {
   const { bookId } = route.params;
   const [book, setBook] = useState(null);
-  const [isBorrowed, setIsBorrowed] = useState(false); // State to track if book is borrowed
+  const [isBorrowed, setIsBorrowed] = useState(false);
 
   useEffect(() => {
     const fetchBook = async () => {
-      // Fetch book details from "books" collection
-      const docRef = collection(db, "books");
-      const docSnapshot = await getDocs(docRef);
-      const bookData = docSnapshot.docs.find((doc) => doc.id === bookId);
-      setBook(bookData.data());
+      try {
+        const docRef = collection(db, "books");
+        const docSnapshot = await getDocs(docRef);
+        const bookData = docSnapshot.docs.find((doc) => doc.id === bookId);
+        setBook(bookData.data());
 
-      // Check if the book is already borrowed
-      const borrowedRef = collection(db, "borrowed");
-      const borrowedQuery = query(borrowedRef, where("bookId", "==", bookId));
-      const borrowedSnapshot = await getDocs(borrowedQuery);
-      if (!borrowedSnapshot.empty) {
-        setIsBorrowed(true); // Set book as borrowed
+        const borrowedRef = collection(db, "borrowed");
+        const borrowedQuery = query(borrowedRef, where("bookId", "==", bookId));
+        const borrowedSnapshot = await getDocs(borrowedQuery);
+        if (!borrowedSnapshot.empty) {
+          setIsBorrowed(true);
+        }
+      } catch (error) {
+        Alert.alert("Error", "Failed to fetch book details.");
       }
     };
 
@@ -30,14 +32,13 @@ const BookDetail = ({ route }) => {
 
   const handleBorrow = async () => {
     try {
-      // Add book to the "borrowed" collection if it's not already borrowed
       if (!isBorrowed) {
         await addDoc(collection(db, "borrowed"), {
           bookId,
           bookName: book.name,
           author: book.author,
         });
-        setIsBorrowed(true); // Set book as borrowed
+        setIsBorrowed(true);
         Alert.alert("Success", "You have borrowed this book!");
       } else {
         Alert.alert("Already Borrowed", "You have already borrowed this book.");
@@ -51,13 +52,14 @@ const BookDetail = ({ route }) => {
     <View style={styles.container}>
       {book ? (
         <>
+          <Image source={{ uri: book.coverImage }} style={styles.coverImage} />
           <Text style={styles.title}>{book.name}</Text>
           <Text style={styles.author}>By {book.author}</Text>
           <Text style={styles.summary}>{book.summary}</Text>
           <Button
             title={isBorrowed ? "Book Already Borrowed" : "Borrow"}
             onPress={handleBorrow}
-            disabled={isBorrowed} // Disable button if book is borrowed
+            disabled={isBorrowed}
             style={styles.button}
           />
         </>
@@ -74,6 +76,12 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f8f8f8",
   },
+  coverImage: {
+    width: "100%",
+    height: 300,
+    resizeMode: "cover",
+    marginBottom: 20,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -83,7 +91,7 @@ const styles = StyleSheet.create({
   author: {
     fontSize: 18,
     color: "#555",
-    marginBottom: 15,
+    marginBottom: 10,
   },
   summary: {
     fontSize: 16,
