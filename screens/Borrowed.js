@@ -1,13 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, Text, FlatList, Button, StyleSheet, Alert } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { db } from "../firebase";
 import { collection, getDocs, deleteDoc } from "firebase/firestore";
 
 const Borrowed = () => {
   const [borrowedBooks, setBorrowedBooks] = useState([]);
 
-  useEffect(() => {
-    const fetchBorrowedBooks = async () => {
+  const fetchBorrowedBooks = async () => {
+    try {
       const borrowedSnapshot = await getDocs(collection(db, "borrowed"));
       const borrowedData = borrowedSnapshot.docs.map((doc) => doc.data());
 
@@ -19,10 +20,10 @@ const Borrowed = () => {
       });
 
       setBorrowedBooks(uniqueBooks);
-    };
-
-    fetchBorrowedBooks();
-  }, []);
+    } catch (error) {
+      Alert.alert("Error", "Could not fetch borrowed books.");
+    }
+  };
 
   const handleReturn = async (bookId) => {
     try {
@@ -42,6 +43,12 @@ const Borrowed = () => {
     }
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchBorrowedBooks();
+    }, [])
+  );
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -58,6 +65,7 @@ const Borrowed = () => {
             />
           </View>
         )}
+        ListEmptyComponent={<Text>No borrowed books found.</Text>}
       />
     </View>
   );
