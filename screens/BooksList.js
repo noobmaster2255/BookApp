@@ -7,7 +7,6 @@ const BooksList = ({ navigation }) => {
   const [books, setBooks] = useState([]);
 
   useEffect(() => {
-    // Fetch books data using onSnapshot (real-time updates)
     const unsubscribe = onSnapshot(collection(db, 'books'), (snapshot) => {
       const booksData = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -16,7 +15,6 @@ const BooksList = ({ navigation }) => {
       setBooks(booksData);
     });
 
-    // Cleanup listener on unmount
     return unsubscribe;
   }, []);
 

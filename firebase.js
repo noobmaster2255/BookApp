@@ -1,9 +1,7 @@
-// firebase.js
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-// Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDG8S9hKPGUeBEGklwzYh3RCtR-bTUtNeQ",
   authDomain: "bookapp-ed90f.firebaseapp.com",
